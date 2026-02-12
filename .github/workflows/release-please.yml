@@ -13,6 +13,10 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      release_tag_name: ${{ steps.release.outputs.tag_name }}
+      release_version: ${{ steps.release.outputs.version }}
     steps:
       - name: Release Please
         id: release
@@ -31,6 +35,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.release_tag_name }}
 
       - name: Ensure scripts are executable
         run: |
@@ -51,6 +57,7 @@ jobs:
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.release-please.outputs.release_tag_name }}
           files: |
             OCRS-*.zip
             appcast.xml
