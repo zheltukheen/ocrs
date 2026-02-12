@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/zheltukheen/ocrs/compare/v1.2.1...v1.2.2) (2026-02-12)
+
+
+### Bug Fixes
+
+* selection hang and latency ([4619829](https://github.com/zheltukheen/ocrs/commit/4619829d55579185123109c1553e6a745dac9053))
+
 ## [1.2.1](https://github.com/zheltukheen/ocrs/compare/v1.2.0...v1.2.1) (2026-02-12)
 
 
