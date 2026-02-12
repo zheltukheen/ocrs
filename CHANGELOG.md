@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/zheltukheen/ocrs/compare/v1.2.0...v1.2.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* upload release assets ([d7d44b3](https://github.com/zheltukheen/ocrs/commit/d7d44b3ce7ebd30358570b97a58e37cd6249e320))
+
 ## [1.2.0](https://github.com/zheltukheen/ocrs/compare/v1.1.0...v1.2.0) (2026-02-12)
 
 
