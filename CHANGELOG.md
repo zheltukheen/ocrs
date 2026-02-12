@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.20 - 2026-02-12
+- Release 1.20.
+
+
 ## 1.1.0 - 2026-02-12
 - Initial public release of OCRS as a lightweight macOS menu bar OCR app.
 - Menu bar UI with Capture, Settings, and Quit actions.
