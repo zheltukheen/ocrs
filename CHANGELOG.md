@@ -29,4 +29,5 @@
 - Two-stage recognition to reduce latency without harming accuracy.
 - Parallelized batch OCR for faster end-to-end results.
 - CI build workflow and automated release workflow.
+- Release Please integration for automated versioning and releases.
 - Comprehensive README and usage documentation.

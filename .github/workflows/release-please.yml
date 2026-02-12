@@ -1,0 +1,49 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Please
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: simple
+          package-name: ocrs
+          changelog-path: CHANGELOG.md
+          version-file: VERSION
+          bump-minor-pre-major: true
+          include-v-in-tag: true
+
+  build-and-release:
+    needs: release-please
+    runs-on: macos-14
+    if: ${{ needs.release-please.outputs.release_created }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build app
+        run: ./build_app.sh
+
+      - name: Create archive
+        run: |
+          VERSION="$(cat VERSION | tr -d '\r\n')"
+          zip -r "OCRS-${VERSION}.zip" "OCRS.app"
+
+      - name: Upload assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            OCRS-*.zip

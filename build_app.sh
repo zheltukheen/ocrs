@@ -5,6 +5,16 @@ IFS=$'\n\t'
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+# Sync Info.plist version from VERSION file for reproducible releases.
+if [[ -f "$SCRIPT_DIR/VERSION" ]]; then
+  VERSION_VALUE="$(cat "$SCRIPT_DIR/VERSION" | tr -d '\r\n')"
+  if [[ -n "$VERSION_VALUE" ]]; then
+    /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION_VALUE}" \
+      -c "Set :CFBundleVersion ${VERSION_VALUE}" \
+      "$SCRIPT_DIR/OCRS-Info.plist" || true
+  fi
+fi
+
 swift build -c release
 
 BIN_PATH="${SCRIPT_DIR}/.build/release/OCRS"

@@ -21,6 +21,7 @@ fi
 DATE="$(date +%Y-%m-%d)"
 BUILD="${BUILD_NUMBER:-$(date +%Y%m%d%H%M)}"
 
+echo "${VERSION}" > VERSION
 /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VERSION}" -c "Set :CFBundleVersion ${BUILD}" "OCRS-Info.plist"
 
 if [[ ! -f CHANGELOG.md ]]; then
