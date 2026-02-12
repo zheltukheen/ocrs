@@ -87,11 +87,8 @@ final class OCRService {
             }
         }
 
-        // Pre-detect text regions to avoid OCR on the full image when possible.
-        let regions = await detectTextRegions(in: prepared.detectionImage)
-        if OCRSDebug.enabled {
-            OCRSDebug.log("Detected text regions: \(regions.count)")
-        }
+        // Pre-detect text regions in parallel with OCR to reduce latency.
+        let regionsTask = Task { await detectTextRegions(in: prepared.detectionImage) }
 
         var fallbackText = ""
         var bestText = ""
@@ -103,7 +100,7 @@ final class OCRService {
         while index < candidates.count {
             let end = min(index + batchSize, candidates.count)
             let batch = Array(candidates[index..<end])
-            let results = await recognizeBatch(batch, mode: mode, languageMode: languageMode, regions: regions)
+            let results = await recognizeBatch(batch, mode: mode, languageMode: languageMode, regionsTask: regionsTask)
 
             var strongFound = false
             for result in results {
@@ -512,12 +509,12 @@ final class OCRService {
     }
 
     // Small-parallel OCR (batch) to reduce total latency without CPU spikes.
-    private func recognizeBatch(_ batch: [OCRCandidate], mode: OCRSAccuracyMode, languageMode: OCRSLanguageMode, regions: [CGRect]) async -> [CandidateResult] {
+    private func recognizeBatch(_ batch: [OCRCandidate], mode: OCRSAccuracyMode, languageMode: OCRSLanguageMode, regionsTask: Task<[CGRect], Never>) async -> [CandidateResult] {
         await withTaskGroup(of: CandidateResult?.self) { group in
             for candidate in batch {
                 group.addTask { [self] in
                     do {
-                        let text = try await recognizeCandidate(candidate, mode: mode, languageMode: languageMode, regions: regions)
+                        let text = try await recognizeCandidate(candidate, mode: mode, languageMode: languageMode, regionsTask: regionsTask)
                         return CandidateResult(label: candidate.label, text: text)
                     } catch {
                         OCRSDebug.log("OCR error \(candidate.label): \(error.localizedDescription)")
@@ -535,13 +532,18 @@ final class OCRService {
     }
 
     // Two-stage OCR: quick pass → region OCR → full OCR fallback.
-    private func recognizeCandidate(_ candidate: OCRCandidate, mode: OCRSAccuracyMode, languageMode: OCRSLanguageMode, regions: [CGRect]) async throws -> String {
+    private func recognizeCandidate(_ candidate: OCRCandidate, mode: OCRSAccuracyMode, languageMode: OCRSLanguageMode, regionsTask: Task<[CGRect], Never>) async throws -> String {
         let quickText = try await quickRecognizeText(in: candidate.image, mode: mode, languageMode: languageMode)
         if isStrong(text: quickText) {
             return quickText
         }
 
         var bestText = quickText
+
+        let regions = await regionsTask.value
+        if OCRSDebug.enabled {
+            OCRSDebug.log("Detected text regions: \(regions.count)")
+        }
 
         if !regions.isEmpty {
             let regionText = try await recognizeTextInRegions(in: candidate.image, mode: mode, languageMode: languageMode, regions: regions)

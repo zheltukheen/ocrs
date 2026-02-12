@@ -6,8 +6,24 @@ final class OCRCaptureController {
     private let resultWindow = OCRResultWindowController()
     private var currentScreenDisplayID: CGDirectDisplayID = 0
     private let permissionManager = OCRSPermissionManager.shared
+    private var isSelecting = false
+    private var isProcessing = false
+    private var lastTriggerAt: TimeInterval = 0
 
     func startCapture(outputMode: OCRSOutputMode, accuracyMode: OCRSAccuracyMode, languageMode: OCRSLanguageMode) {
+        let now = Date().timeIntervalSince1970
+        if now - lastTriggerAt < 0.35 {
+            return
+        }
+        lastTriggerAt = now
+
+        if isSelecting {
+            cancelSelection()
+            return
+        }
+
+        guard !isProcessing else { return }
+
         guard permissionManager.ensureScreenRecordingPermission() else {
             OCRSErrorPresenter.shared.showScreenRecordingDenied()
             return
@@ -22,6 +38,7 @@ final class OCRCaptureController {
             currentScreenDisplayID = displayID
         }
 
+        isSelecting = true
         areaSelectionWindow = AreaSelectionWindow(
             contentRect: screen.frame,
             styleMask: .borderless,
@@ -35,18 +52,21 @@ final class OCRCaptureController {
         }
 
         areaSelectionWindow?.onCancel = { [weak self] in
-            self?.areaSelectionWindow?.orderOut(nil)
-            self?.areaSelectionWindow = nil
+            self?.cancelSelection()
         }
 
-        areaSelectionWindow?.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
+        areaSelectionWindow?.makeKeyAndOrderFront(nil)
     }
 
     private func captureArea(_ rect: CGRect, on screen: NSScreen, outputMode: OCRSOutputMode, accuracyMode: OCRSAccuracyMode, languageMode: OCRSLanguageMode) async {
+        guard !isProcessing else { return }
+        isProcessing = true
+        defer { isProcessing = false }
+
         guard rect.width > 10 && rect.height > 10 else {
             await MainActor.run {
-                areaSelectionWindow?.orderOut(nil)
-                areaSelectionWindow = nil
+                cancelSelection()
             }
             return
         }
@@ -57,7 +77,7 @@ final class OCRCaptureController {
         }
 
         await MainActor.run {
-            areaSelectionWindow?.orderOut(nil)
+            cancelSelection()
         }
 
         try? await Task.sleep(nanoseconds: 50_000_000)
@@ -118,6 +138,15 @@ final class OCRCaptureController {
 
         await MainActor.run {
             areaSelectionWindow = nil
+        }
+    }
+
+    private func cancelSelection() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.areaSelectionWindow?.orderOut(nil)
+            self.areaSelectionWindow = nil
+            self.isSelecting = false
         }
     }
 
