@@ -15,14 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Release Please
+        id: release
         uses: googleapis/release-please-action@v4
         with:
-          release-type: simple
-          package-name: ocrs
-          changelog-path: CHANGELOG.md
-          version-file: VERSION
-          bump-minor-pre-major: true
-          include-v-in-tag: true
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
 
   build-and-release:
     needs: release-please
@@ -34,6 +32,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure scripts are executable
+        run: |
+          chmod +x ./build_app.sh
+          chmod +x ./scripts/generate_appcast.sh
+
       - name: Build app
         run: ./build_app.sh
 
@@ -42,8 +45,12 @@ jobs:
           VERSION="$(cat VERSION | tr -d '\r\n')"
           zip -r "OCRS-${VERSION}.zip" "OCRS.app"
 
+      - name: Generate appcast
+        run: ./scripts/generate_appcast.sh
+
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             OCRS-*.zip
+            appcast.xml

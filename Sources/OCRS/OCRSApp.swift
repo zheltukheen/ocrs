@@ -5,6 +5,7 @@ import AppKit
 struct OCRSApp: App {
     @NSApplicationDelegateAdaptor(OCRSAppDelegate.self) private var appDelegate
     @StateObject private var appState = OCRSAppState()
+    @StateObject private var updater = OCRSUpdater()
     @Environment(\.openWindow) private var openWindow
 
     var body: some Scene {
@@ -14,6 +15,10 @@ struct OCRSApp: App {
             }
 
             Divider()
+
+            Button("Check for Updates...") {
+                updater.checkForUpdates()
+            }
 
             Button("Settings...") {
                 openWindow(id: "settings")
@@ -28,7 +33,7 @@ struct OCRSApp: App {
         }
 
         Window("OCRS Settings", id: "settings") {
-            OCRSSettingsView(appState: appState)
+            OCRSSettingsView(appState: appState, updater: updater)
         }
         .defaultSize(width: 560, height: 560)
         .windowResizability(.contentSize)

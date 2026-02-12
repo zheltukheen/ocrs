@@ -30,4 +30,5 @@
 - Parallelized batch OCR for faster end-to-end results.
 - CI build workflow and automated release workflow.
 - Release Please integration for automated versioning and releases.
+- Sparkle-based auto-update support with GitHub Releases appcast.
 - Comprehensive README and usage documentation.

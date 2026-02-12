@@ -52,13 +52,24 @@ Menu bar OCR for macOS with area capture, hotkeys, and clipboard or popup output
 **CI and Releases**
 - `ci.yml` builds the app on each push and pull request.
 - `release-please.yml` manages versioning and release PRs.
-- When a release is created, `release-please.yml` builds the app and uploads it to GitHub Releases.
+- When a release is created, `release-please.yml` builds the app, generates `appcast.xml`, and uploads both to GitHub Releases.
 - Release notes come from `CHANGELOG.md`.
 
 **Release flow (Release Please)**
 1. Merge changes into `main`.
 2. Release Please opens a PR with version + changelog.
 3. Merge the PR and a GitHub Release is created with `OCRS.app` attached.
+4. The release also publishes `appcast.xml` for Sparkle auto-updates.
+
+**Required GitHub settings**
+1. Repository Settings → Actions → General.
+2. Workflow permissions: **Read and write**.
+3. Enable **“Allow GitHub Actions to create and approve pull requests.”**
+
+**Sparkle updates**
+- The app uses Sparkle for automatic updates.
+- The appcast is published as a GitHub Release asset (`appcast.xml`).
+- For production-grade security, add Sparkle EdDSA signing and `SUPublicEDKey`.
 
 **Manual version bump (optional)**
 1. `./scripts/bump_version.sh 1.2.0 "Release notes line 1" "Release notes line 2"`

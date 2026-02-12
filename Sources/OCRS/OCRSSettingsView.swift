@@ -3,6 +3,7 @@ import AppKit
 
 struct OCRSSettingsView: View {
     @ObservedObject var appState: OCRSAppState
+    @ObservedObject var updater: OCRSUpdater
     @ObservedObject private var permissionManager = OCRSPermissionManager.shared
     @AppStorage(OCRSPreferenceKey.outputMode) private var outputModeRaw: String = OCRSOutputMode.copy.rawValue
     @AppStorage(OCRSPreferenceKey.accuracyMode) private var accuracyModeRaw: String = OCRSAccuracyMode.standard.rawValue
@@ -34,6 +35,48 @@ struct OCRSSettingsView: View {
                 .padding(4)
             } label: {
                 Text("General")
+                    .font(.headline)
+            }
+
+            GroupBox {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(alignment: .center, spacing: 16) {
+                        Text("Updates")
+                            .font(.subheadline.weight(.semibold))
+                            .frame(width: 110, alignment: .leading)
+
+                        Toggle("Auto Check", isOn: $updater.automaticallyChecksForUpdates)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                        Text("Auto Check")
+                            .font(.subheadline)
+                            .frame(width: 90, alignment: .leading)
+
+                        Toggle("Auto Download", isOn: $updater.automaticallyDownloadsUpdates)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                        Text("Auto Download")
+                            .font(.subheadline)
+                        Spacer(minLength: 0)
+                    }
+
+                    Text("Automatic checks and downloads are handled by Sparkle.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.leading, 126)
+
+                    HStack(alignment: .center, spacing: 16) {
+                        Text("")
+                            .frame(width: 110)
+                        Button("Check for Updates...") {
+                            updater.checkForUpdates()
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+                .padding(4)
+            } label: {
+                Text("Updates")
                     .font(.headline)
             }
 
@@ -173,6 +216,12 @@ struct OCRSSettingsView: View {
         .onAppear {
             _ = permissionManager.refresh()
             launchAtLogin = OCRSLaunchAtLogin.isEnabled()
+        }
+        .onChange(of: updater.automaticallyChecksForUpdates) { _, _ in
+            updater.syncSettings()
+        }
+        .onChange(of: updater.automaticallyDownloadsUpdates) { _, _ in
+            updater.syncSettings()
         }
         .onChange(of: launchAtLogin) { _, newValue in
             let ok = OCRSLaunchAtLogin.setEnabled(newValue)

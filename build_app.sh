@@ -27,9 +27,10 @@ APP_DIR="${SCRIPT_DIR}/OCRS.app"
 CONTENTS_DIR="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 RESOURCES_DIR="$CONTENTS_DIR/Resources"
+FRAMEWORKS_DIR="$CONTENTS_DIR/Frameworks"
 
 rm -rf "$APP_DIR"
-mkdir -p "$MACOS_DIR" "$RESOURCES_DIR"
+mkdir -p "$MACOS_DIR" "$RESOURCES_DIR" "$FRAMEWORKS_DIR"
 
 cp "$BIN_PATH" "$MACOS_DIR/OCRS"
 cp "$SCRIPT_DIR/OCRS-Info.plist" "$CONTENTS_DIR/Info.plist"
@@ -58,5 +59,16 @@ if [[ -f "$ICON_ICNS" ]]; then
 fi
 
 chmod +x "$MACOS_DIR/OCRS"
+
+# Bundle SwiftPM frameworks (e.g., Sparkle) if present.
+while IFS= read -r framework; do
+  name="$(basename "$framework")"
+  rm -rf "$FRAMEWORKS_DIR/$name"
+  cp -R "$framework" "$FRAMEWORKS_DIR/$name"
+done < <(find "$SCRIPT_DIR/.build" -type d -name "*.framework" 2>/dev/null)
+
+if compgen -G "$FRAMEWORKS_DIR/*.framework" > /dev/null; then
+  install_name_tool -add_rpath "@executable_path/../Frameworks" "$MACOS_DIR/OCRS" || true
+fi
 
 echo "Built app at: $APP_DIR"
