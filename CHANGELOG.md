@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/zheltukheen/ocrs/compare/v1.1.0...v1.2.0) (2026-02-12)
+
+
+### Features
+
+* initial OCRS release ([4d1486b](https://github.com/zheltukheen/ocrs/commit/4d1486b799cb40733a322b72d2f1ea17fa421b63))
+* sparkle auto-updates ([b10423c](https://github.com/zheltukheen/ocrs/commit/b10423c0d7d1dd563b0c6e98ab4a66b67d667bf2))
+
 ## 1.20 - 2026-02-12
 - Release 1.20.
 
